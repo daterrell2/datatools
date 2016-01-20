@@ -1,123 +1,53 @@
 import sqlalchemy
-from sqlalchemy.sql.expression import select
-#import pyodbc
 from datatools.connections import base
-
-class Database(base.BaseConnection):
-	
-	def __init__(self, connection_string):
-
-		self.connection_string = connection_string
-		self.engine = None
-		self.connection = None
-		self.metadata = None
-
-		super(Database, self).__init__()
-
-	def connect(self):
-		try:
-			self.connection = sqlalchemy.create_engine(self.connection_string).connect()
-			#self.connection = self.engine.connect()
-			self.metadata = sqlalchemy.MetaData(bind=self.connection.engine, reflect=True)
-			# self.connection = pyodbc.connect(self.connection_string, *kwargs)
-			# self.data = self.connection.cursor()
-			# self.tables = {t: Table(self.connection, t) for t in self.data.tables()}
-
-		except (sqlalchemy.exc.ArgumentError, sqlalchemy.exc.DBAPIError) as error:
-			
-			self.connection_error = error
-
-	def disconnect(self):
-
-		self.connection.close()
-
-	def get_dataset(self, table_name, schema = None, *args, **kwargs):
-
-		return DatabaseTable(self, table_name, schema)
-
-	def execute_sql(self, stmt, *args, **kwargs):
-
-		return self.connection.execute(sqlalchemy.text(stmt, *args, **kwargs))
-
-
 
 class DatabaseTable(base.BaseDataset):
 
-	def __init__(self, db, table_name, schema, *args, **kwargs):
+	def __init__(self, connection_string, tablename=None, schema=None, *args, **kwargs):
 
-		self.connection_source = db
-		self.name = table_name
+		self.table = tablename
 		self.schema = schema
-		self.metadata = db.metadata
-		self.dataset = sqlalchemy.Table(table_name, db.metadata, schema=schema, *args, **kwargs)
-		# self.connection = self.dataset.bind.connect()
-		self.columns = [c.name for c in self.dataset.columns]
-		self.records = self.get_records()
-		# self.column_types = [{c.name: c.type_} for c in self.dataset.columns]
+		self.datasrc = None
+		self.metadata = None
+		self.columns = []
 
-		super(DatabaseTable, self).__init__()
+		super(DatabaseTable, self).__init__(connection_string = connection_string)
 
-	def select(self, cols = [], *args, **kwargs):
+	def load(self):
 
-		if not cols:
-			stmt = select([self.dataset], *args, **kwargs)
+		self.datasrc = sqlalchemy.create_engine(self.connection_string).connect()
+		self.metadata = sqlalchemy.MetaData(bind=self.datasrc.engine)
 
-		else:
-			col_list = []
-			for c in cols:
-				if c not in self.columns:
-					return None
-				else:
-					col_list.append(c)
-			
-			stmt = select([col_list], *args, **kwargs)
+		if self.table:
 
-		return self.connection_source.connection.execute(stmt)
+				self.columns = [col.name for col in self.get_table().columns]
+				tbl_select = self.get_table().select()
+				tbl_ins = self.get_table().insert()
+				#self.columns = [col.name for col in self.data.columns]
+				self.records = base.Reader(self.execute(tbl_select))
+				#self.writer = base.Writer(self.execute(tbl_ins))
 
-	def get_records(self, *args, **kwargs):
+	def close(self):
 
-		results = self.select(*args, **kwargs)
+		self.datasrc.close()
+		self.datasrc = None
 
-		for row in results:
+	def refresh(self):
 
-			yield row
+		tbl_select = self.get_table().select()
+		conn = self.data_src
+		self.records = base.Reader(conn(tbl_select))
 
+	def get_table(self):
 
-	# def get_record(self, *args, **kwargs):
+		return sqlalchemy.Table(self.table, self.metadata, schema=self.schema, autoload=True)
 
-	# 	return self.select(*args, **kwargs).fetchone()
-		
+	def execute(self, sql):
 
-	def get_columns(self, cols, *args, **kwargs):
+		results = self.datasrc.execute(sql)
 
-		results = self.select(cols, *args, **kwargs)
+		return results
 
-		for row in results:
+	def execute_sql(self, sql, *args, **kwargs):
 
-			yield row
-
-	def get_column(self, col, *args, **kwargs):
-
-		results = self.select([col], *args, **kwargs)
-
-		for row in results:
-
-			yield row
-
-	def inerst(self, vals, *args, **kwargs):
-
-		ins = self.dataset.insert().values(vals)
-
-		return self.connection.execute(ins)
-
-
-
-
-
-
-
-
-
-
-
-
+		return self.datasrc.execute(sqlalchemy.text(sql, *args, **kwargs))

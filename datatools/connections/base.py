@@ -1,53 +1,78 @@
-class BaseConnection(object):
-
-	def __init__(self, *args, **kwargs):
-
-		pass
-
-	def connect(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseConnection.open_connection() function is not implemented yet.')
-
-	def disconnect(self, *args, **kwargs):
-		
-		raise RuntimeError( 'BaseConnection.close_connection() function is not implemented yet.')
-
-	def get_dataset(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseConnection.get_dataset() function is not implemented yet.')
-
-
-
 class BaseDataset(object):
 
-	def __init__(self, *args, **kwargs):
+	def __init__(self, connection_string, *args, **kwargs):
+
+		self.connection_string = connection_string
+		self.records = None
+		self.writer = None
+		self.columns = None
+
+	def load(self):
+
+		raise RuntimeError( 'BaseDataset.load() function is not implemented yet')
+
+	def close(self):
+
+		raise RuntimeError('BaseDataset.close() function is not implemented yet')
+
+	def reload(self):
+
+		self.close()
+		self.load()
+
+	def read_next(self):
+
+		if self.records:
+			
+			return next(self.records)
+
+	def read_all(self):
+
+		self.reload()
+		data = self.records._dump()
+
+		return data
+
+	def write(self, vals):
+
+		if self.writer:
+
+			return self.writer.writerows(vals)
+
+class Reader(object):
+
+	def __init__(self, dataset):
+
+		self.dataset=dataset
+
+	def __iter__(self):
+
+		return self._read()
+
+	def __next__(self):
+
+		return next(self._read())
+
+	def _read(self):
+
+		for row in self.dataset:
+
+			yield row
+
+	def _dump(self):
+
+		return [row for row in self._read()]
+
+class Writer(object):
+
+	def __init__(self, dataset):
 
 		pass
 
-	def get_records(self, *args, **kwargs):
+	def _writerow(self, vals):
 
-		raise RuntimeError( 'BaseDataset.get_records() function is not implemented yet')
+		pass
 
-	def get_record(self, *args, **kwargs):
+	def _writerows(self, vals):
 
-		raise RuntimeError( 'BaseDataset.get_record() function is not implemented yet')
-
-	def get_columns(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseDataset.get_columns() function is not implemented yet')
-
-	def get_column(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseDataset.get_column() function is not implemented yet')
-
-	def inerst(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseDataset.insert() function is not implemented yet')
-
-	def append(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseDataset.append() function is not implemented yet')
-
-	def bulk_insert(self, *args, **kwargs):
-
-		raise RuntimeError( 'BaseDataset.bulk_insert() function is not implemented yet')
+		pass
