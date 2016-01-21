@@ -24,7 +24,7 @@ class DatabaseTable(base.BaseDataset):
 				tbl_select = self.get_table().select()
 				tbl_ins = self.get_table().insert()
 				#self.columns = [col.name for col in self.data.columns]
-				self.records = base.Reader(self.execute(tbl_select))
+				self.records = base.Reader(self.execute(tbl_select), self.columns)
 				#self.writer = base.Writer(self.execute(tbl_ins))
 
 	def close(self):

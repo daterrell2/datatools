@@ -1,3 +1,5 @@
+from collections import namedtuple
+
 class BaseDataset(object):
 
 	def __init__(self, connection_string, *args, **kwargs):
@@ -41,9 +43,10 @@ class BaseDataset(object):
 
 class Reader(object):
 
-	def __init__(self, dataset):
+	def __init__(self, dataset, columns):
 
-		self.dataset=dataset
+		self.dataset = dataset
+		self.schema = namedtuple('DataRecord_', columns)		
 
 	def __iter__(self):
 
@@ -55,7 +58,7 @@ class Reader(object):
 
 	def _read(self):
 
-		for row in self.dataset:
+		for row in map(self.schema._make, self.dataset):
 
 			yield row
 
