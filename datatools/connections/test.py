@@ -3,10 +3,8 @@ from datatools.connections import database, textfile
 
 def load_db():
 	cs = 'mssql+pyodbc://localdb'
-	tbl = 'Data'
-	schema = None
 
-	return database.DatabaseTable(cs, tbl, schema)
+	return database.Database(cs)
 
 def load_csv():
 
@@ -17,7 +15,7 @@ def load_csv():
 def load_fw():
 
 	cs = r'C:\Users\dterrell\Projects\Python\test_data\Returned Data\email.email'
-	fw = [20, 2, 282, 60, 1, 40]
+	fw = [20, 2, 282, 60, 1, 39]
 	hd = ['UID', 'STA', 'SKIP1', 'EMAIL', 'MATCHIND', 'SKIP2']
 
-	return textfile.FixedWidthFile(cs, fw, headers=False, default_headers=hd)
+	return textfile.FixedWidthFile(cs, fw, newline=False, headers=False, default_headers=hd)

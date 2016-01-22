@@ -1,56 +1,14 @@
-from collections import namedtuple
+import collections
 
-class BaseDataset(object):
+class BaseDataset(collections.Iterator):
 
-	def __init__(self, connection_string, *args, **kwargs):
+	def __init__(self, *args, **kwargs):
 
-		self.connection_string = connection_string
 		self.records = None
-		self.writer = None
 		self.columns = None
+		self.datasrc = None
 
-	def load(self):
-
-		raise RuntimeError( 'BaseDataset.load() function is not implemented yet')
-
-	def close(self):
-
-		raise RuntimeError('BaseDataset.close() function is not implemented yet')
-
-	def reload(self):
-
-		self.close()
 		self.load()
-
-	def read_next(self):
-
-		if self.records:
-			
-			return next(self.records)
-
-	def read_all(self):
-
-		self.reload()
-		data = self.records._dump()
-
-		return data
-
-	def write(self, vals):
-
-		if self.writer:
-
-			return self.writer.writerows(vals)
-
-class Reader(object):
-
-	def __init__(self, dataset, columns):
-
-		self.dataset = dataset
-		self.schema = namedtuple('DataRecord_', columns)		
-
-	def __iter__(self):
-
-		return self._read()
 
 	def __next__(self):
 
@@ -58,24 +16,82 @@ class Reader(object):
 
 	def _read(self):
 
-		for row in map(self.schema._make, self.dataset):
+		for rw in self.records:
 
-			yield row
+			yield dict(rw)
 
-	def _dump(self):
+	def load(self):
 
-		return [row for row in self._read()]
+		self.set_datasrc()
+		self.set_records()
 
-class Writer(object):
+	def close(self):
 
-	def __init__(self, dataset):
+		self.datasrc.close()
+		self.datasrc = None
 
-		pass
+	def reload(self):
 
-	def _writerow(self, vals):
+		self.close()
+		self.load()
 
-		pass
+	def get_datasrc(self):
 
-	def _writerows(self, vals):
+		return self.datasrc
 
-		pass
+	def set_datasrc(self):
+
+		raise RuntimeError('BaseDataset.set_datasrc() function is not implemented yet')
+
+	def get_records(self):
+
+		return self.records
+
+	def set_records(self):
+
+		raise RuntimeError('BaseDataset.set_records() function is not implemented yet')
+
+
+# class Reader(object):
+
+# 	def __init__(self, dataset, columns):
+
+# 		self.dataset = dataset
+# 		self.schema = collections.namedtuple('DataRecord', columns)		
+
+# 	def __iter__(self):
+
+# 		return self._read()
+
+# 	def __next__(self):
+
+# 		return next(self._read())
+
+# 	def _read(self):
+
+# 		for row in map(self.schema._make, self.dataset):
+
+# 			yield row
+
+# 	def _dump(self):
+
+# 		return [row for row in self._read()]
+
+# 	def _dump_dict(self):
+
+# 		return map(_asdict, self._dump())
+
+
+# class Writer(object):
+
+# 	def __init__(self, dataset):
+
+# 		pass
+
+# 	def _writerow(self, vals):
+
+# 		pass
+
+# 	def _writerows(self, vals):
+
+# 		pass

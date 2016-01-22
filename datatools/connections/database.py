@@ -1,53 +1,56 @@
 import sqlalchemy
 from datatools.connections import base
 
-class DatabaseTable(base.BaseDataset):
+class Database(object):
 
-	def __init__(self, connection_string, tablename=None, schema=None, *args, **kwargs):
+	def __init__(self, connection_string, schema=None):
 
-		self.table = tablename
+		self.connection_string = connection_string
 		self.schema = schema
-		self.datasrc = None
-		self.metadata = None
-		self.columns = []
+		self.engine = sqlalchemy.create_engine(connection_string)
+		self.metadata = sqlalchemy.MetaData(bind=self.engine)
+		self.tables = sqlalchemy.inspect(self.engine).get_table_names(schema=schema)
 
-		super(DatabaseTable, self).__init__(connection_string = connection_string)
+	def __getitem__(self, key):
 
-	def load(self):
+		if key not in self.tables:
+			raise KeyError('%s is not a valid table.'%key)
+		else:
+			tbl = DatabaseTable(self, key, schema=self.schema)
+		return tbl
 
-		self.datasrc = sqlalchemy.create_engine(self.connection_string).connect()
-		self.metadata = sqlalchemy.MetaData(bind=self.datasrc.engine)
+	def connect(self):
 
-		if self.table:
+		return self.engine.connect()
 
-				self.columns = [col.name for col in self.get_table().columns]
-				tbl_select = self.get_table().select()
-				tbl_ins = self.get_table().insert()
-				#self.columns = [col.name for col in self.data.columns]
-				self.records = base.Reader(self.execute(tbl_select), self.columns)
-				#self.writer = base.Writer(self.execute(tbl_ins))
+	def execute(self, stmt):
 
-	def close(self):
-
-		self.datasrc.close()
-		self.datasrc = None
-
-	def refresh(self):
-
-		tbl_select = self.get_table().select()
-		conn = self.data_src
-		self.records = base.Reader(conn(tbl_select))
-
-	def get_table(self):
-
-		return sqlalchemy.Table(self.table, self.metadata, schema=self.schema, autoload=True)
-
-	def execute(self, sql):
-
-		results = self.datasrc.execute(sql)
-
-		return results
+		return self.connect().execute(stmt)
 
 	def execute_sql(self, sql, *args, **kwargs):
 
 		return self.datasrc.execute(sqlalchemy.text(sql, *args, **kwargs))
+
+class DatabaseTable(base.BaseDataset):
+
+	def __init__(self, db, tablename=None, schema=None):
+
+		self.db = db
+		self.table = sqlalchemy.Table(tablename, db.metadata, schema=schema, autoload=True)		
+
+		super(DatabaseTable, self).__init__()
+
+	def set_datasrc(self):
+
+		self.datasrc = self.db.connect()
+
+	def set_records(self):
+		self.columns = [col.name for col in self.table.columns]
+		self.records = (rw for rw in self.get_datasrc().execute(self.table.select()))
+		#self.records = base.Reader(reader, cols)
+
+
+class SQLSet(base.BaseDataset):
+
+	pass
+
