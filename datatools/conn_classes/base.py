@@ -1,4 +1,5 @@
 import collections
+from contextlib import contextmanager
 
 class BaseDataset(collections.Iterator):
 
@@ -35,6 +36,7 @@ class BaseDataset(collections.Iterator):
 		self.close()
 		self.load()
 
+	@contextlib
 	def get_datasrc(self):
 
 		return self.datasrc
@@ -43,6 +45,7 @@ class BaseDataset(collections.Iterator):
 
 		raise RuntimeError('BaseDataset.set_datasrc() function is not implemented yet')
 
+	@contextlib
 	def get_records(self):
 
 		return self.records

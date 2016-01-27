@@ -1,56 +1,50 @@
 import sqlalchemy
-from datatools.connections import base
+import sqlparse
 
-class Database(object):
+def initialize_db(connection_string):
+	try:
+		return sqlalchemy.create_engine(connection_string)
 
-	def __init__(self, connection_string, schema=None):
+	except (sqlalchemy.exc.SQLAlchemyError, sqlalchemy.exc.DBAPIError) as err:
+		raise err
 
-		self.connection_string = connection_string
-		self.schema = schema
-		self.engine = sqlalchemy.create_engine(connection_string)
-		self.metadata = sqlalchemy.MetaData(bind=self.engine)
-		self.tables = sqlalchemy.inspect(self.engine).get_table_names(schema=schema)
+def initialize_table(db, tblname, schema=None, *cols):
+	meta = sqlalchemy.MetaData(bind=db)
+	return sqlalchemy.Table(tblname, meta, 
+							schema=schema, 
+							autoload=True, 
+							include_columns=cols)
 
-	def __getitem__(self, key):
+def read_table(tbl, **params):
+	stmt = tbl.select(**params)
+	return _exec_sql(tbl.bind, stmt)
 
-		if key not in self.tables:
-			raise KeyError('%s is not a valid table.'%key)
-		else:
-			tbl = DatabaseTable(self, key, schema=self.schema)
-		return tbl
+def read_sql(db, sql):
+	return _exec_sql(db, sql)
 
-	def connect(self):
+def _exec_sql(db, sql):
+	reader = [] if parse_sql_type(sql) != 'SELECT' else db.execute(sql)
+	return ((row.keys(), row) for row in reader)
 
-		return self.engine.connect()
+def table_insert(db, tblname, vals, schema=None, returning=[]):
+	print(vals)
+	with db.begin() as conn:
+		meta = sqlalchemy.MetaData(bind=db)
+		tbl = sqlalchemy.Table(tblname, meta, schema=schema, autoload=True)
+		stmt = tbl.insert()
 
-	def execute(self, stmt):
+		if returning:
+			cols = [tbl.c[col] for col in returning]
+			stmt = stmt.returning(*cols)
+		
+		return conn.execute(stmt, *vals)
 
-		return self.connect().execute(stmt)
+def parse_sql(stmts):
 
-	def execute_sql(self, sql, *args, **kwargs):
+	return sqlparse.parse(stmts)
 
-		return self.datasrc.execute(sqlalchemy.text(sql, *args, **kwargs))
+def parse_sql_type(stmts):
 
-class DatabaseTable(base.BaseDataset):
+	parsed = parse_sql(str(stmts))
 
-	def __init__(self, db, tablename=None, schema=None):
-
-		self.db = db
-		self.table = sqlalchemy.Table(tablename, db.metadata, schema=schema, autoload=True)		
-
-		super(DatabaseTable, self).__init__()
-
-	def set_datasrc(self):
-
-		self.datasrc = self.db.connect()
-
-	def set_records(self):
-		self.columns = [col.name for col in self.table.columns]
-		self.records = (rw for rw in self.get_datasrc().execute(self.table.select()))
-		#self.records = base.Reader(reader, cols)
-
-
-class SQLSet(base.BaseDataset):
-
-	pass
-
+	return  parsed[0].get_type() if len(parsed) == 1 else None
