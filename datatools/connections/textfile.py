@@ -1,34 +1,45 @@
 import csv
-
 from datatools.utils.textfile_utils import convert_to_fw, parse_fw_file
 
-def initialize_file(path, mode='rU'):
-	return open(path, mode)
+def csv_target(path, mode='wU'):
 
-def finalize_file(filestream):
-	return filestream.close()
+	def _write(cols, rows, **params):
+		with open(path, mode) as csvfile:
+			csv_writer = csv.writer(writer, params)
+			for line in cols + rows:
+				csv_writer.writerow(line)
+	return _write
 
-def write_to_csv(filestream, cols, rows, **params):
-	with filestream as writer:
-		csv_writer = csv.writer(writer, params)
-		for line in cols + rows:
-			csv_writer.writerow(line)
+def fixedwidth_target(path, fieldwidths, mode='wU'):
 
-def write_to_fixedwidth(filestream, cols, rows, fieldwidths, **params):
-	with filestream as writer:
-		data = convert_to_fw(cols + rows, fieldwidths, **params)
-		for line in data:
-			writer.write(''.join(line))
+	def _write(cols, rows, **params):
+		with open(path, mode) as fwfile:
+			data = convert_to_fw(cols + rows, fieldwidths, **params)
+			for line in data:
+				fwfile.write(''.join(line))
+	return _write
 
-def read_csv(filestream, headers=True, **params):
-	csvreader = csv.reader(filestream, **params)
-	return _read_file(csvreader, headers)
 
-def read_fixedwidth(filestream, fieldwidths, headers=True, newline=True):
-	fwreader = parse_fw_file(filestream, fieldwidths, newline)
-	return _read_file(fwreader, headers)
+def csv_source(path, mode='rU', headers=True, **params):
 
-def _read_file(reader, headers):
-	cols = next(reader) if headers else []
-	for row in reader:
-		yield cols, row
+	def _read():
+		with open(path, mode) as csvfile:
+			csvreader = csv.reader(csvfile, **params)
+			return _file_iter(csvreader, headers)
+	return _read
+
+
+def fixedwidth_source(path, fieldwidths, mode='rU', headers=True, newline=True):
+
+	def _read():
+		with open(path, mode) as fwfile:
+			fwreader = parse_fw_file(fwfile, fieldwidths, newline)
+			return _file_iter(fwreader, headers)
+	return _read
+
+def _file_iter(reader, headers):
+	if headers:
+		return (dict(zip(cols, row)) for row in reader)
+
+	else:
+		return(dict(zip(range(len(row)), row)) for row in reader)
