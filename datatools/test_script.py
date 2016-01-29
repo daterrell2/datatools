@@ -4,13 +4,14 @@ from datatools.connections import database, textfile
 
 CS_DB = 'mssql+pyodbc://localdb'
 CS_CSV = r'C:\Users\dterrell\Projects\Python\test_data\Client Data\test_data.csv'
-CS_FW = r'C:\Users\dterrell\Projects\Python\test_data\Returned Data\email.email'
+CS_FW = r'C:\Users\dterrell\Projects\Python\test_data\Returned Data\NHIA011916_EMAIL.email'
 CS_CSV2 = r'C:\Users\dterrell\Projects\Python\test_data\To Append\test_ouput.txt'
 
 FW_WIDTHS = [20, 2, 282, 60, 1, 39]
 
 batch_cols = ('ClientID', 'State', 'Type', 'Name')
-batch_vals = [(1, 'VA', 'EmailAppend', 'VA' + datetime.date.today().strftime('%m%d%y'))]
+batch_vals = [(1, 'VA', 'EmailAppend',
+              'VA' + datetime.date.today().strftime('%m%d%y'))]
 
 db = database.db_connection(CS_DB)
 batch_tbl_target = database.table_target(db, 'Batch')
@@ -19,10 +20,10 @@ header_tbl_target = database.table_target(db, 'Headers')
 
 csv_src = textfile.csv_source(CS_CSV)
 fw_src = textfile.fixedwidth_source(CS_FW, FW_WIDTHS)
-pipe_delim_target = textfile.csv_target(CS_CSV2, {'delimiter':'|'})
+pipe_delim_target = textfile.csv_target(CS_CSV2, {'delimiter': '|'})
 
 # def simple_col_map(src, dest):
-	
+
 # 	src_cols, dest_cols = src[0], dest[0]
 
 # 	return zip(src_cols, dest_cols[:len(src_cols)])
