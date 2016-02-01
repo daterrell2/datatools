@@ -37,7 +37,7 @@ def auto_map_cols(source, cols):
 
 def map_func(func_map):
 
-    def map_funcs_to_row(row):
+    def _transform(row):
         mapped = OrderedDict()
 
         for k, v in row.items():
@@ -46,8 +46,14 @@ def map_func(func_map):
             else:
                 mapped[k] = v
         return mapped
+    return _transform
 
 
 def append_column(name, val):
 
-    pass
+    def _transform(row):
+
+        row[name] = val
+
+        return row
+    return _transform
