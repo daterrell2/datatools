@@ -1,5 +1,8 @@
 
-60 lines (50 sloc) 726 Bytes
+#specific folders and files
+tests/test_data
+tests/local_config.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
