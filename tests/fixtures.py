@@ -21,11 +21,11 @@ def csv_with_headers():
 
 
 @pytest.fixture(scope='module')
-def fw_with_headers():
+def fw_no_headers():
     path = FW_PATH
     with open(path, 'w') as f:
         fwfile = FixedWidthWriter(f, WIDTHS)
-        populate_file(fwfile, headers=True)
+        populate_file(fwfile, headers=False)
 
     return path
 

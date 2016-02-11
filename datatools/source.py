@@ -49,7 +49,7 @@ class CSVSource(FileSource):
 
 class FixedWidthSource(FileSource):
 
-    def __init__(self, path, fwparams=None, headers=False, fileparams=None):
+    def __init__(self, path, fwparams, headers=False, fileparams=None):
 
         super(FixedWidthSource, self).__init__(path, fwparams,
                                                headers, fileparams)
@@ -60,6 +60,7 @@ class FixedWidthSource(FileSource):
         if not fwparams.get('fieldwidths'):
             raise AttributeError
         self.fwparams = fwparams
+        self.headers = headers
 
     def _get_reader(self, f):
 

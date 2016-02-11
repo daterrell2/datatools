@@ -9,7 +9,7 @@ class FixedWidthWriter:
 
     def writerow(self, row):
         if not self.rowcount == 0:
-            self.write('\n')
+            self.fwfile.write('\n')
         row = ''.join(pad_row(row, self.fieldwidths, self.align))
         self.fwfile.write(row)
         self.rowcount += 1
