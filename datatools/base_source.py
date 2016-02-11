@@ -20,14 +20,14 @@ class DBSource:
 
     def columns(self):
         data = peekable(self.extract())
-        return data.peek().keys()
+        return list(data.peek().keys())
 
 
 class FileSource:
 
     def __init__(self, *args, **kwargs):
 
-        self.initializae(*args, **kwargs)
+        self.initialize(*args, **kwargs)
 
     def extract(self):
 
@@ -46,4 +46,4 @@ class FileSource:
 
     def columns(self):
         data = peekable(self.extract())
-        return data.peek().keys()
+        return list(data.peek().keys())
