@@ -6,14 +6,14 @@ from datatools.utils import database, textfile
 
 class TableSource(DBSource):
 
-    def __init__(self, db, tblname, schema=None):
+    def __init__(self, db, tblname, schema=None, cols=None):
 
-        super(TableSource, self).__init__(db, tblname, schema)
+        super(TableSource, self).__init__(db, tblname, schema, cols)
 
-    def initialize(self, db, tblname, schema=None):
+    def initialize(self, db, tblname, schema=None, cols=None):
 
-        self.table = database.initialize_table(db, tblname, schema)
-        self.select = self.table.select()
+        self.select = database.initialize_table_source(db, tblname,
+                                                       schema, cols)
         self.db = db
 
 

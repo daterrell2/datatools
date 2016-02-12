@@ -5,13 +5,14 @@ from datatools.utils import database, textfile
 
 class TableTarget:
 
-    def __init__(self, db, tblname, schema=None):
+    def __init__(self, db, tblname, schema=None, cols=None):
 
         self.initialize(db, tblname, schema=schema)
 
-    def initialize(self, db, tblname, schema=None):
+    def initialize(self, db, tblname, schema=None, cols=None):
 
         self.table = database.initialize_table(db, tblname, schema=schema)
+        self._columns = cols or [col.name for col in self.table.c]
 
     def load(self, source, **params):
         eng = self.table.bind
@@ -23,7 +24,7 @@ class TableTarget:
 
     def columns(self):
 
-        return [col.name for col in self.table.c]
+        return self._columns
 
 
 class FileTarget:

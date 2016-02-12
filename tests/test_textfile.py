@@ -40,7 +40,7 @@ def test_fw_src(fw_no_headers):
 
 def test_fixed_width_writer():
     path = FILES['FW_SRC']
-    widths = [1, 2, 3, 4, 5]
+    widths = [100, 100]
     data = make_fake_data(range(len(widths)), range(1))
     data = list(next(data).values())
     padded_data = [v[:w] + (' ' * (w - len(v))) for v, w in zip(data, widths)]

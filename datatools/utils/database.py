@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.expression import text, select
 
 from datatools.utils.sql import parse_sql_type
 
@@ -12,13 +12,24 @@ def connect_to_db(url):
         raise err
 
 
-def initialize_table(db, tblname, schema=None, *cols):
+def initialize_table(db, tblname, schema=None):
     meta = sqlalchemy.MetaData(bind=db, reflect=True, schema=schema)
     try:
         return meta.tables[tblname]
 
     except KeyError as err:
         raise err
+
+
+def initialize_table_source(db, tblname, schema=None, cols=None):
+
+    tbl = initialize_table(db, tblname, schema)
+
+    if not cols:
+        return select([tbl])
+
+    else:
+        return select([tbl.c[col] for col in cols])
 
 
 def initialize_sql(db, sql):

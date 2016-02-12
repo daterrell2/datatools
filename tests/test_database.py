@@ -64,6 +64,22 @@ def test_table_source(db):
         tbl = source.TableSource(db, 'does_not_exist')
 
 
+def test_table_source_with_cols(db):
+
+    tbl = source.TableSource(db, TBL, cols=['Col0', 'Col1'])
+    assert tbl.columns() == ['Col0', 'Col1']
+    assert len([rw for rw in tbl.extract()]) == len(NUMROWS)
+
+    records = set(tuple(rw) for rw in db.execute('SELECT Col0, Col1 FROM %s' % TBL))
+    test_records = set(tuple(rw.values()) for rw in (tbl.extract()))
+
+    assert test_records == records
+
+    with pytest.raises(KeyError):
+
+        tbl = source.TableSource(db, TBL, cols=['not_a_col'])
+
+
 def test_sql_source(db):
 
     sql = source.SQLSource(db, 'SELECT * FROM %s' % TBL)
