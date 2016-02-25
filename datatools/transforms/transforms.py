@@ -12,6 +12,24 @@ def transform_chain(source, transforms):
     return map(row_transform, source)
 
 
+def source_transform(fn):
+
+    def _transform(source):
+
+        return fn(source)
+
+    return _transform
+
+
+def row_transform(fn):
+
+    def _transform(row):
+
+        return fn(row)
+
+    return _transform
+
+
 def map_cols(col_map):
 
     def _transform(row):
